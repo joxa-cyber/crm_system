@@ -1,13 +1,214 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+}
+
+enum ProjectStatus {
+  YANGI
+  JARAYONDA
+  TUGALLANGAN
+  BEKOR
+}
+
+enum ExpenseCategory {
+  MATERIALLAR
+  ISHHAQI
+  TRANSPORT
+  OVQAT
+  ASBOB_USKUNALAR
+  BOSHQA
+}
+
+enum Currency {
+  UZS
+  USD
+  EUR
+  RUB
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  role         Role     @default(MANAGER)
+  phone        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  expenses        Expense[]
+  projectPayments ProjectPayment[]
+  salaryPayments  SalaryPayment[]
+  createdProjects Project[]        @relation("ProjectCreator")
+
+  @@map("users")
+}
+
+model ServiceCategory {
+  id   String @id @default(cuid())
+  name String @unique
+
+  projects Project[]
+
+  @@map("service_categories")
+}
+
+model Project {
+  id                String          @id @default(cuid())
+  name              String
+  serviceCategoryId String
+  serviceCategory   ServiceCategory @relation(fields: [serviceCategoryId], references: [id])
+  clientName        String
+  clientPhone       String
+  clientAddress     String
+  contractAmount    Decimal         @db.Decimal(18, 2)
+  currency          Currency        @default(UZS)
+  contractAmountUzs Decimal         @db.Decimal(18, 2)
+  status            ProjectStatus   @default(YANGI)
+  startDate         DateTime?
+  endDate           DateTime?
+  notes             String?
+  createdById       String
+  createdBy         User            @relation("ProjectCreator", fields: [createdById], references: [id])
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  expenses          Expense[]
+  payments          ProjectPayment[]
+  workerAssignments WorkerAssignment[]
+  materialUsages    MaterialUsage[]
+
+  @@map("projects")
+}
+
+model Expense {
+  id          String          @id @default(cuid())
+  projectId   String
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  category    ExpenseCategory
+  amount      Decimal         @db.Decimal(18, 2)
+  currency    Currency        @default(UZS)
+  amountUzs   Decimal         @db.Decimal(18, 2)
+  date        DateTime        @default(now())
+  description String
+  addedById   String
+  addedBy     User            @relation(fields: [addedById], references: [id])
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("expenses")
+}
+
+model ProjectPayment {
+  id           String   @id @default(cuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  amount       Decimal  @db.Decimal(18, 2)
+  currency     Currency @default(UZS)
+  amountUzs    Decimal  @db.Decimal(18, 2)
+  date         DateTime @default(now())
+  note         String?
+  recordedById String
+  recordedBy   User     @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@map("project_payments")
+}
+
+model Worker {
+  id            String    @id @default(cuid())
+  firstName     String
+  lastName      String
+  birthDate     DateTime? @db.Date
+  phone         String?
+  position      String
+  monthlySalary Decimal   @db.Decimal(18, 2)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  salaryPayments SalaryPayment[]
+  assignments    WorkerAssignment[]
+
+  @@map("workers")
+}
+
+model SalaryPayment {
+  id        String   @id @default(cuid())
+  workerId  String
+  worker    Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  amount    Decimal  @db.Decimal(18, 2)
+  currency  Currency @default(UZS)
+  amountUzs Decimal  @db.Decimal(18, 2)
+  date      DateTime @default(now())
+  note      String?
+  paidById  String
+  paidBy    User     @relation(fields: [paidById], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("salary_payments")
+}
+
+model WorkerAssignment {
+  id        String    @id @default(cuid())
+  workerId  String
+  worker    Worker    @relation(fields: [workerId], references: [id])
+  projectId String
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+  daysWorked Int?
+
+  @@unique([workerId, projectId])
+  @@map("worker_assignments")
+}
+
+model InventoryItem {
+  id          String   @id @default(cuid())
+  name        String
+  unit        String
+  quantity    Decimal  @db.Decimal(18, 2)
+  unitPrice   Decimal  @db.Decimal(18, 2)
+  currency    Currency @default(UZS)
+  minQuantity Decimal? @db.Decimal(18, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  usages MaterialUsage[]
+
+  @@map("inventory_items")
+}
+
+model MaterialUsage {
+  id              String        @id @default(cuid())
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  projectId       String
+  project         Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  quantity        Decimal       @db.Decimal(18, 2)
+  date            DateTime      @default(now())
+  note            String?
+
+  @@map("material_usages")
+}
+
+model ExchangeRate {
+  id        String   @id @default(cuid())
+  currency  String
+  rate      Decimal  @db.Decimal(18, 4)
+  date      DateTime @db.Date
+  fetchedAt DateTime @default(now())
+
+  @@unique([currency, date])
+  @@map("exchange_rates")
 }
