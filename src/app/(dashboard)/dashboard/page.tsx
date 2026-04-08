@@ -59,7 +59,7 @@ async function getDashboardData() {
   const totalPayments = Number(payments._sum.amountUzs || 0);
   const totalSalary = Number(salaryPayments._sum.amountUzs || 0);
   const activeProjects = projects.filter((p) => p.status === "JARAYONDA").length;
-  const profit = totalPayments - totalExpenses - totalSalary;
+  const profit = totalContractAmount - totalExpenses - totalSalary;
 
   return {
     totalContractAmount,
@@ -87,12 +87,12 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">
-              Jami daromad (to'lovlar)
+              Jami daromad (shartnomalar)
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-green-600">
-              {formatUZS(data.totalPayments)}
+              {formatUZS(data.totalContractAmount)}
             </p>
           </CardContent>
         </Card>
@@ -142,7 +142,19 @@ export default async function DashboardPage() {
       </div>
 
       {/* Second row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">
+              Kelgan to'lovlar
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-green-600">
+              {formatUZS(data.totalPayments)}
+            </p>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">
@@ -166,12 +178,12 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">
-              Shartnomalar summasi
+              Qolgan qarz (mijozdan)
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-gray-900">
-              {formatUZS(data.totalContractAmount)}
+            <p className={`text-2xl font-bold ${data.totalContractAmount - data.totalPayments > 0 ? "text-orange-600" : "text-green-600"}`}>
+              {formatUZS(data.totalContractAmount - data.totalPayments)}
             </p>
           </CardContent>
         </Card>

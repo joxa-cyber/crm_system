@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html lang="uz" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full bg-gray-50">
         {children}
+        <Analytics />
         <Toaster position="top-right" richColors />
       </body>
     </html>
