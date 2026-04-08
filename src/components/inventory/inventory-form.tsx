@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -62,11 +63,11 @@ export function InventoryForm() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Miqdor *</Label>
-              <Input name="quantity" type="number" step="0.01" placeholder="0" required className="h-10" />
+              <AmountInput name="quantity" required className="h-10" />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Narx *</Label>
-              <Input name="unitPrice" type="number" step="0.01" placeholder="0" required className="h-10" />
+              <AmountInput name="unitPrice" required className="h-10" />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Valyuta</Label>
@@ -82,7 +83,7 @@ export function InventoryForm() {
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Min. miqdor</Label>
-              <Input name="minQuantity" type="number" step="0.01" placeholder="0" className="h-10" />
+              <AmountInput name="minQuantity" className="h-10" />
             </div>
           </div>
 

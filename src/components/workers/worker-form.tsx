@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { createWorker, updateWorker } from "@/actions/workers";
@@ -59,7 +60,7 @@ export function WorkerForm({ worker }: WorkerFormProps) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="monthlySalary">Oylik maosh (so'm) *</Label>
-              <Input id="monthlySalary" name="monthlySalary" type="number" step="0.01" placeholder="0" defaultValue={worker?.monthlySalary} required className="h-11" />
+              <AmountInput id="monthlySalary" name="monthlySalary" defaultValue={worker?.monthlySalary} required className="h-11" />
             </div>
           </div>
 

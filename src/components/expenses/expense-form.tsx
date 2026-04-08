@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -80,11 +81,8 @@ export function ExpenseForm({ projectId }: { projectId: string }) {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Summa *</Label>
-              <Input
+              <AmountInput
                 name="amount"
-                type="number"
-                step="0.01"
-                placeholder="0"
                 required
                 className="h-10"
               />

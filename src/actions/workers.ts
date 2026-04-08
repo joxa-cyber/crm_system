@@ -74,6 +74,30 @@ export async function updateWorker(id: string, formData: FormData) {
   redirect(`/ishchilar/${id}`);
 }
 
+export async function deleteWorker(id: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return { error: "Faqat CEO o'chira oladi" };
+  }
+
+  // O'chirish oldidan bog'liq ma'lumotlarni tekshirish
+  const worker = await db.worker.findUnique({
+    where: { id },
+    include: {
+      _count: { select: { salaryPayments: true, assignments: true } },
+    },
+  });
+  if (!worker) return { error: "Ishchi topilmadi" };
+
+  // Bog'liq ma'lumotlarni o'chirish
+  await db.salaryPayment.deleteMany({ where: { workerId: id } });
+  await db.workerAssignment.deleteMany({ where: { workerId: id } });
+  await db.worker.delete({ where: { id } });
+
+  revalidatePath("/ishchilar");
+  redirect("/ishchilar");
+}
+
 export async function toggleWorkerActive(id: string) {
   const session = await auth();
   if (!session?.user) throw new Error("Ruxsat yo'q");

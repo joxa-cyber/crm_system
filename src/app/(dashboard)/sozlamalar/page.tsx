@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ManagerForm } from "@/components/settings/manager-form";
 import { CategoryForm } from "@/components/settings/category-form";
 import { ExchangeRates } from "@/components/settings/exchange-rates";
+import { DeleteManagerButton } from "@/components/settings/delete-manager-button";
 
 export default async function SozlamalarPage() {
   const session = await auth();
@@ -48,6 +49,9 @@ export default async function SozlamalarPage() {
                     {user.email} • {user.role === "ADMIN" ? "CEO" : "Menejer"}
                   </p>
                 </div>
+                {user.role !== "ADMIN" && (
+                  <DeleteManagerButton userId={user.id} />
+                )}
               </div>
             ))}
           </div>

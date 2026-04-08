@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { SalaryButton } from "@/components/workers/salary-button";
 import { SalaryRow } from "@/components/workers/salary-row";
+import { DeleteWorkerButton } from "@/components/workers/delete-worker-button";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -55,6 +56,9 @@ export default async function IshchiTafsilotPage({ params }: Props) {
           <Link href={`/ishchilar/${worker.id}/tahrirlash`}>
             <Button variant="outline" size="sm">Tahrirlash</Button>
           </Link>
+          {session.user.role === "ADMIN" && (
+            <DeleteWorkerButton workerId={worker.id} />
+          )}
         </div>
       </div>
 
