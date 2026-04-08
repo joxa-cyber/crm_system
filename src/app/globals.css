@@ -122,9 +122,49 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground text-base;
+    font-size: 16px;
+    color: #1a1a1a;
   }
   html {
     @apply font-sans;
+  }
+  h1 {
+    @apply text-3xl font-extrabold tracking-tight;
+    color: #0a0a0a;
+  }
+  h2, h3 {
+    @apply font-bold;
+    color: #111;
+  }
+  label {
+    @apply text-sm font-semibold;
+    color: #222;
+  }
+  input, textarea, select, [data-slot="select-trigger"] {
+    @apply text-base;
+    font-size: 16px !important;
+    color: #111 !important;
+  }
+  input::placeholder, textarea::placeholder {
+    color: #999 !important;
+  }
+  p, span, td, th, a, div {
+    color: inherit;
+  }
+  .text-gray-500 {
+    color: #555 !important;
+  }
+  .text-gray-400 {
+    color: #777 !important;
+  }
+  .text-gray-600 {
+    color: #444 !important;
+  }
+  .text-sm {
+    font-size: 0.9375rem !important;
+  }
+  .text-xs {
+    font-size: 0.8125rem !important;
   }
 }
