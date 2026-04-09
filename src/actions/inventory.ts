@@ -76,6 +76,7 @@ export async function useMaterial(formData: FormData) {
   const inventoryItemId = formData.get("inventoryItemId") as string;
   const projectId = formData.get("projectId") as string;
   const quantity = parseFloat(formData.get("quantity") as string);
+  const date = formData.get("date") as string;
   const note = formData.get("note") as string;
 
   if (!inventoryItemId || !projectId || isNaN(quantity) || quantity <= 0) {
@@ -95,6 +96,7 @@ export async function useMaterial(formData: FormData) {
         inventoryItemId,
         projectId,
         quantity,
+        date: date ? new Date(date) : new Date(),
         note: note || null,
       },
     }),

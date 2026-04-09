@@ -32,6 +32,7 @@ interface InventoryCardProps {
     unitPrice: string;
     currency: string;
     minQuantity: string | null;
+    createdAt: string;
   };
   totalUsed: number;
   usages: Usage[];
@@ -66,7 +67,12 @@ export function InventoryCard({ item, totalUsed, usages, projects, isAdmin }: In
       <CardContent className="pt-5">
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
-          <h3 className="font-semibold text-gray-900">{item.name}</h3>
+          <div>
+            <h3 className="font-semibold text-gray-900">{item.name}</h3>
+            <p className="text-xs text-gray-400">
+              Kelgan: {new Date(item.createdAt).toLocaleDateString("uz-UZ")}
+            </p>
+          </div>
           <div className="flex items-center gap-1">
             {isLow && (
               <Badge variant="destructive" className="text-xs">

@@ -71,10 +71,14 @@ export function UseMaterialForm({
             </SelectContent>
           </Select>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1">
             <Label className="text-xs">Miqdor * (maks: {maxQuantity} {unit})</Label>
             <AmountInput name="quantity" required className="h-9" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Sana</Label>
+            <Input name="date" type="date" defaultValue={new Date().toISOString().split("T")[0]} className="h-9" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Izoh</Label>
