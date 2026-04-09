@@ -1,23 +1,67 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { formatUZS, formatCurrency } from "@/lib/formatters";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { formatUZS } from "@/lib/formatters";
+import { Card, CardContent } from "@/components/ui/card";
 import { InventoryForm } from "@/components/inventory/inventory-form";
+import { InventoryCard } from "@/components/inventory/inventory-card";
 
 export default async function OmborPage() {
   const session = await auth();
   if (!session?.user) return null;
 
-  const items = await db.inventoryItem.findMany({
-    orderBy: { name: "asc" },
+  const [items, projects] = await Promise.all([
+    db.inventoryItem.findMany({
+      orderBy: { name: "asc" },
+      include: {
+        usages: {
+          orderBy: { date: "desc" },
+          include: {
+            project: { select: { name: true } },
+          },
+        },
+      },
+    }),
+    db.project.findMany({
+      where: { status: { in: ["YANGI", "JARAYONDA"] } },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+  ]);
+
+  // Stats
+  let totalValue = 0;
+  let totalUsedAll = 0;
+  const itemsData = items.map((item) => {
+    const remaining = Number(item.quantity);
+    const totalUsed = item.usages.reduce((sum, u) => sum + Number(u.quantity), 0);
+    const unitPrice = Number(item.unitPrice);
+    totalValue += remaining * unitPrice;
+    totalUsedAll += totalUsed;
+
+    return {
+      item: {
+        id: item.id,
+        name: item.name,
+        unit: item.unit,
+        quantity: String(item.quantity),
+        unitPrice: String(item.unitPrice),
+        currency: item.currency,
+        minQuantity: item.minQuantity ? String(item.minQuantity) : null,
+      },
+      totalUsed,
+      usages: item.usages.map((u) => ({
+        id: u.id,
+        quantity: String(u.quantity),
+        date: u.date.toISOString(),
+        note: u.note,
+        projectName: u.project.name,
+      })),
+    };
   });
 
-  const totalValue = items.reduce(
-    (sum, item) => sum + Number(item.quantity) * Number(item.unitPrice),
-    0
-  );
+  const lowStockCount = items.filter(
+    (i) => i.minQuantity && Number(i.quantity) <= Number(i.minQuantity)
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -26,17 +70,31 @@ export default async function OmborPage() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4 pb-4">
-            <p className="text-sm text-gray-500">Jami materiallar</p>
-            <p className="text-3xl font-bold text-gray-900">{items.length}</p>
+            <p className="text-xs text-gray-500">Jami materiallar</p>
+            <p className="text-2xl font-bold text-gray-900">{items.length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4">
-            <p className="text-sm text-gray-500">Ombor qiymati</p>
-            <p className="text-2xl font-bold text-gray-900">{formatUZS(totalValue)}</p>
+            <p className="text-xs text-gray-500">Ombor qiymati</p>
+            <p className="text-lg font-bold text-gray-900">{formatUZS(totalValue)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <p className="text-xs text-gray-500">Jami ishlatilgan</p>
+            <p className="text-lg font-bold text-orange-600">{totalUsedAll.toLocaleString("uz")}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <p className="text-xs text-gray-500">Kam qolganlar</p>
+            <p className={`text-2xl font-bold ${lowStockCount > 0 ? "text-red-600" : "text-green-600"}`}>
+              {lowStockCount}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -53,50 +111,16 @@ export default async function OmborPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {items.map((item) => {
-            const isLow =
-              item.minQuantity && Number(item.quantity) <= Number(item.minQuantity);
-            return (
-              <Card
-                key={item.id}
-                className={isLow ? "border-red-300 bg-red-50/30" : ""}
-              >
-                <CardContent className="pt-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                    {isLow && (
-                      <Badge variant="destructive" className="text-xs">
-                        Kam qoldi!
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="space-y-1.5 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Miqdor:</span>
-                      <span className="font-medium">
-                        {Number(item.quantity).toLocaleString()} {item.unit}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Narx:</span>
-                      <span>
-                        {formatCurrency(item.unitPrice, item.currency)} / {item.unit}
-                      </span>
-                    </div>
-                    <div className="flex justify-between border-t pt-1.5">
-                      <span className="text-gray-500">Jami:</span>
-                      <span className="font-medium">
-                        {formatCurrency(
-                          Number(item.quantity) * Number(item.unitPrice),
-                          item.currency
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {itemsData.map((data) => (
+            <InventoryCard
+              key={data.item.id}
+              item={data.item}
+              totalUsed={data.totalUsed}
+              usages={data.usages}
+              projects={projects}
+              isAdmin={session.user.role === "ADMIN"}
+            />
+          ))}
         </div>
       )}
     </div>

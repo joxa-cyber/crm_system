@@ -38,9 +38,9 @@ export async function createInventoryItem(formData: FormData) {
   return { success: true };
 }
 
-export async function updateInventoryItem(id: string, formData: FormData) {
+export async function updateInventoryItem(id: string, formData: FormData): Promise<{ success?: boolean; error?: string }> {
   const session = await auth();
-  if (!session?.user) throw new Error("Ruxsat yo'q");
+  if (!session?.user) return { error: "Ruxsat yo'q" };
 
   await db.inventoryItem.update({
     where: { id },

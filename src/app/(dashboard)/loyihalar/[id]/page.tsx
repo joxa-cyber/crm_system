@@ -12,6 +12,7 @@ import { ExpenseForm } from "@/components/expenses/expense-form";
 import { PaymentForm } from "@/components/projects/payment-form";
 import { ExpenseRow } from "@/components/expenses/expense-row";
 import { PaymentRow } from "@/components/projects/payment-row";
+import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -80,9 +81,12 @@ export default async function LoyihaTafsilotPage({ params }: Props) {
         <div className="flex items-center gap-2">
           <ProjectStatusSelect projectId={project.id} currentStatus={project.status} />
           {session.user.role === "ADMIN" && (
-            <Link href={`/loyihalar/${project.id}/tahrirlash`}>
-              <Button variant="outline" size="sm">Tahrirlash</Button>
-            </Link>
+            <>
+              <Link href={`/loyihalar/${project.id}/tahrirlash`}>
+                <Button variant="outline" size="sm">Tahrirlash</Button>
+              </Link>
+              <DeleteProjectButton projectId={project.id} />
+            </>
           )}
         </div>
       </div>
