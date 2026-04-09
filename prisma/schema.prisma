@@ -173,20 +173,53 @@ model WorkerAssignment {
   @@map("worker_assignments")
 }
 
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  address   String?
+  notes     String?
+  createdAt DateTime @default(now())
+
+  inventoryItems InventoryItem[]
+  restocks       InventoryRestock[]
+
+  @@map("suppliers")
+}
+
 model InventoryItem {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   unit        String
-  quantity    Decimal  @db.Decimal(18, 2)
-  unitPrice   Decimal  @db.Decimal(18, 2)
-  currency    Currency @default(UZS)
-  minQuantity Decimal? @db.Decimal(18, 2)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  quantity    Decimal   @db.Decimal(18, 2)
+  unitPrice   Decimal   @db.Decimal(18, 2)
+  currency    Currency  @default(UZS)
+  minQuantity Decimal?  @db.Decimal(18, 2)
+  supplierId  String?
+  supplier    Supplier? @relation(fields: [supplierId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  usages MaterialUsage[]
+  usages   MaterialUsage[]
+  restocks InventoryRestock[]
 
   @@map("inventory_items")
+}
+
+model InventoryRestock {
+  id              String        @id @default(cuid())
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  quantity        Decimal       @db.Decimal(18, 2)
+  unitPrice       Decimal       @db.Decimal(18, 2)
+  currency        Currency      @default(UZS)
+  supplierId      String?
+  supplier        Supplier?     @relation(fields: [supplierId], references: [id])
+  date            DateTime      @default(now())
+  note            String?
+  createdAt       DateTime      @default(now())
+
+  @@map("inventory_restocks")
 }
 
 model MaterialUsage {
@@ -196,6 +229,7 @@ model MaterialUsage {
   projectId       String
   project         Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   quantity        Decimal       @db.Decimal(18, 2)
+  returnedQty     Decimal       @db.Decimal(18, 2) @default(0)
   date            DateTime      @default(now())
   note            String?
 

@@ -82,6 +82,13 @@ export function InventoryForm() {
               </Select>
             </div>
             <div className="space-y-1">
+              <Label className="text-xs">Kelgan sana</Label>
+              <Input name="arrivedDate" type="date" defaultValue={new Date().toISOString().split("T")[0]} className="h-10" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
               <Label className="text-xs">Min. miqdor</Label>
               <AmountInput name="minQuantity" className="h-10" />
             </div>
