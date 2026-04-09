@@ -50,6 +50,7 @@ model User {
   projectPayments ProjectPayment[]
   salaryPayments  SalaryPayment[]
   createdProjects Project[]        @relation("ProjectCreator")
+  estimates       Estimate[]       @relation("EstimateCreator")
 
   @@map("users")
 }
@@ -87,6 +88,7 @@ model Project {
   payments          ProjectPayment[]
   workerAssignments WorkerAssignment[]
   materialUsages    MaterialUsage[]
+  estimates         Estimate[]
 
   @@map("projects")
 }
@@ -234,6 +236,67 @@ model MaterialUsage {
   note            String?
 
   @@map("material_usages")
+}
+
+model Estimate {
+  id          String   @id @default(cuid())
+  name        String
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id])
+  clientName  String
+  clientPhone String?
+  clientAddress String?
+  notes       String?
+  status      EstimateStatus @default(QORALAMA)
+  createdById String
+  createdBy   User     @relation("EstimateCreator", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items    EstimateItem[]
+  payments EstimatePayment[]
+
+  @@map("estimates")
+}
+
+enum EstimateStatus {
+  QORALAMA
+  YUBORILGAN
+  TASDIQLANGAN
+  BEKOR
+}
+
+model EstimateItem {
+  id          String   @id @default(cuid())
+  estimateId  String
+  estimate    Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  sortOrder   Int      @default(0)
+  name        String
+  description String?
+  quantity    Decimal  @db.Decimal(18, 2)
+  unit        String
+  unitPrice   Decimal  @db.Decimal(18, 4)
+  currency    Currency @default(USD)
+  // Watt hisoblash uchun (panel va h.k.)
+  wattPerUnit Decimal? @db.Decimal(18, 2)
+  pricePerWatt Decimal? @db.Decimal(18, 4)
+  totalAmount Decimal  @db.Decimal(18, 2)
+  createdAt   DateTime @default(now())
+
+  @@map("estimate_items")
+}
+
+model EstimatePayment {
+  id         String   @id @default(cuid())
+  estimateId String
+  estimate   Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  amount     Decimal  @db.Decimal(18, 2)
+  currency   Currency @default(UZS)
+  date       DateTime @default(now())
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@map("estimate_payments")
 }
 
 model ExchangeRate {
