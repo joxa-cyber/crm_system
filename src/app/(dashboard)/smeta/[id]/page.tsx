@@ -11,10 +11,9 @@ import {
   EstimateStatusSelect,
   DuplicateEstimateButton,
   DeleteEstimateButton,
-  PrintEstimateButton,
 } from "@/components/estimates/estimate-actions";
-import { deleteEstimatePayment } from "@/actions/estimates";
 import { DeletePaymentButton } from "@/components/estimates/delete-payment-button";
+import { DownloadPdfButton } from "@/components/estimates/download-pdf-button";
 
 const STATUS_COLORS: Record<string, string> = {
   QORALAMA: "bg-gray-100 text-gray-800",
@@ -93,7 +92,34 @@ export default async function SmetaTafsilotPage({ params }: Props) {
         </div>
         <div className="flex items-center gap-2 flex-wrap print:hidden">
           <EstimateStatusSelect estimateId={estimate.id} currentStatus={estimate.status} />
-          <PrintEstimateButton />
+          <DownloadPdfButton
+            estimateName={estimate.name}
+            clientName={estimate.clientName}
+            clientPhone={estimate.clientPhone}
+            clientAddress={estimate.clientAddress}
+            projectName={estimate.project?.name || null}
+            createdByName={estimate.createdBy.fullName}
+            createdAt={estimate.createdAt.toISOString()}
+            items={estimate.items.map((item) => ({
+              name: item.name,
+              quantity: String(item.quantity),
+              unit: item.unit,
+              unitPrice: String(item.unitPrice),
+              currency: item.currency,
+              wattPerUnit: item.wattPerUnit ? String(item.wattPerUnit) : null,
+              pricePerWatt: item.pricePerWatt ? String(item.pricePerWatt) : null,
+              totalAmount: String(item.totalAmount),
+            }))}
+            payments={estimate.payments.map((p) => ({
+              date: p.date.toISOString(),
+              amount: String(p.amount),
+              currency: p.currency,
+              note: p.note,
+            }))}
+            totalByCurrency={totalByCurrency}
+            paidByCurrency={paidByCurrency}
+            debtByCurrency={debtByCurrency}
+          />
           <DuplicateEstimateButton estimateId={estimate.id} />
           {session.user.role === "ADMIN" && (
             <DeleteEstimateButton estimateId={estimate.id} />
