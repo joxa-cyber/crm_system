@@ -1,7 +1,8 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { notFound } from "next/navigation";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatUZS } from "@/lib/formatters";
+import { getExchangeRate } from "@/lib/cbu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EstimateItemForm } from "@/components/estimates/estimate-item-form";
@@ -70,6 +71,28 @@ export default async function SmetaTafsilotPage({ params }: Props) {
     const debt = total - paid;
     if (Math.abs(debt) > 0.01) {
       debtByCurrency[cur] = debt;
+    }
+  }
+
+  // Bugungi kurs bo'yicha jami UZS
+  const currencies = Object.keys(totalByCurrency);
+  const hasMultipleCurrencies = currencies.length > 1 || (currencies.length === 1 && currencies[0] !== "UZS");
+  let combinedTotalUzs = 0;
+  const rateInfo: Record<string, number> = {};
+  if (hasMultipleCurrencies) {
+    for (const cur of currencies) {
+      if (cur === "UZS") {
+        rateInfo[cur] = 1;
+        combinedTotalUzs += totalByCurrency[cur];
+      } else {
+        try {
+          const rate = await getExchangeRate(cur);
+          rateInfo[cur] = rate;
+          combinedTotalUzs += totalByCurrency[cur] * rate;
+        } catch {
+          rateInfo[cur] = 0;
+        }
+      }
     }
   }
 
@@ -189,6 +212,31 @@ export default async function SmetaTafsilotPage({ params }: Props) {
                     <span className="font-bold text-lg">{formatCurrency(val, cur)}</span>
                   </div>
                 ))}
+
+                {/* Bugungi kurs bo'yicha jami */}
+                {hasMultipleCurrencies && combinedTotalUzs > 0 && (
+                  <div className="border-t border-gray-300 pt-3 mt-3 space-y-1">
+                    <p className="text-xs text-gray-500 font-medium">Bugungi kurs bo'yicha:</p>
+                    {Object.entries(totalByCurrency).map(([cur, val]) => {
+                      if (cur === "UZS") return (
+                        <div key={cur} className="flex justify-between text-xs text-gray-500">
+                          <span>{formatUZS(val)}</span>
+                        </div>
+                      );
+                      const rate = rateInfo[cur] || 0;
+                      return (
+                        <div key={cur} className="flex justify-between text-xs text-gray-500">
+                          <span>{formatCurrency(val, cur)} × {rate.toLocaleString("uz-UZ")} =</span>
+                          <span>{formatUZS(val * rate)}</span>
+                        </div>
+                      );
+                    })}
+                    <div className="flex justify-between text-base pt-1 border-t border-gray-200">
+                      <span className="font-bold">Jami (UZS):</span>
+                      <span className="font-bold text-lg text-blue-700">{formatUZS(combinedTotalUzs)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

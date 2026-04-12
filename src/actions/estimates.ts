@@ -149,7 +149,7 @@ export async function addEstimateItem(formData: FormData) {
   return { success: true };
 }
 
-export async function updateEstimateItem(id: string, formData: FormData) {
+export async function updateEstimateItem(id: string, formData: FormData): Promise<{ success?: boolean; error?: string }> {
   const session = await auth();
   if (!session?.user) throw new Error("Ruxsat yo'q");
 
@@ -161,6 +161,10 @@ export async function updateEstimateItem(id: string, formData: FormData) {
   const wattPerUnit = formData.get("wattPerUnit") as string;
   const pricePerWatt = formData.get("pricePerWatt") as string;
 
+  if (!name || isNaN(quantity) || quantity <= 0) {
+    return { error: "Ma'lumotlar noto'g'ri" };
+  }
+
   const wattVal = wattPerUnit ? parseFloat(wattPerUnit) : null;
   const ppwVal = pricePerWatt ? parseFloat(pricePerWatt) : null;
 
@@ -170,8 +174,10 @@ export async function updateEstimateItem(id: string, formData: FormData) {
   if (wattVal && ppwVal) {
     finalPrice = wattVal * ppwVal;
     totalAmount = quantity * finalPrice;
-  } else {
+  } else if (!isNaN(unitPrice)) {
     totalAmount = quantity * unitPrice;
+  } else {
+    return { error: "Narxni kiriting" };
   }
 
   const item = await db.estimateItem.update({
