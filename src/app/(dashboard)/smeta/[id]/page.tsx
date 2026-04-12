@@ -74,21 +74,40 @@ export default async function SmetaTafsilotPage({ params }: Props) {
     }
   }
 
-  // Bugungi kurs bo'yicha jami UZS
+  // Bugungi kurs bo'yicha jami
   const currencies = Object.keys(totalByCurrency);
   const hasMultipleCurrencies = currencies.length > 1 || (currencies.length === 1 && currencies[0] !== "UZS");
   let combinedTotalUzs = 0;
+  let combinedTotalUsd = 0;
+  let usdRate = 0;
   const rateInfo: Record<string, number> = {};
   if (hasMultipleCurrencies) {
+    // Avval USD kursini olish
+    try {
+      usdRate = await getExchangeRate("USD");
+    } catch {
+      usdRate = 0;
+    }
+
     for (const cur of currencies) {
       if (cur === "UZS") {
         rateInfo[cur] = 1;
         combinedTotalUzs += totalByCurrency[cur];
+        if (usdRate > 0) {
+          combinedTotalUsd += totalByCurrency[cur] / usdRate;
+        }
+      } else if (cur === "USD") {
+        rateInfo[cur] = usdRate;
+        combinedTotalUzs += totalByCurrency[cur] * usdRate;
+        combinedTotalUsd += totalByCurrency[cur];
       } else {
         try {
           const rate = await getExchangeRate(cur);
           rateInfo[cur] = rate;
           combinedTotalUzs += totalByCurrency[cur] * rate;
+          if (usdRate > 0) {
+            combinedTotalUsd += (totalByCurrency[cur] * rate) / usdRate;
+          }
         } catch {
           rateInfo[cur] = 0;
         }
@@ -231,7 +250,11 @@ export default async function SmetaTafsilotPage({ params }: Props) {
                         </div>
                       );
                     })}
-                    <div className="flex justify-between text-base pt-1 border-t border-gray-200">
+                    <div className="flex justify-between text-base pt-2 border-t border-gray-200">
+                      <span className="font-bold">Jami (USD):</span>
+                      <span className="font-bold text-lg text-green-700">{formatCurrency(combinedTotalUsd, "USD")}</span>
+                    </div>
+                    <div className="flex justify-between text-base">
                       <span className="font-bold">Jami (UZS):</span>
                       <span className="font-bold text-lg text-blue-700">{formatUZS(combinedTotalUzs)}</span>
                     </div>

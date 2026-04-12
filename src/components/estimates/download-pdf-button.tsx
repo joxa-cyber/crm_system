@@ -247,6 +247,15 @@ export function DownloadPdfButton(props: DownloadPdfButtonProps) {
         y += 2;
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
+
+        // Jami USD
+        const usdRate = rates.USD || 1;
+        const totalUsd = totalUzs / usdRate;
+        doc.text("Jami (USD):", margin, y);
+        doc.text(fmtCur(totalUsd, "USD"), pageWidth - margin, y, { align: "right" });
+        y += 7;
+
+        // Jami UZS
         doc.text("Jami (UZS):", margin, y);
         doc.text(fmtCur(totalUzs, "UZS"), pageWidth - margin, y, { align: "right" });
         y += 8;
